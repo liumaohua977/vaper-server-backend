@@ -62,7 +62,7 @@ exports.search = async (ctx) => {
     }
 }
 /**
- * 查找一批节点的之间的关系
+ * 共有多少条关系
  */
 exports.count = async (ctx) => {
     try {
@@ -80,10 +80,52 @@ exports.count = async (ctx) => {
         }
     }
 }
+/**
+ * 获取关系数据
+ */
+exports.fetchLinks = async (ctx) => {
+    try {
+        const session = driver.session()
+        var links = await fetchLinks(session)
+        ctx.body = {
+            "status": "success",
+            "links": links
+        }
+    } catch (error) {
+        ctx.status = 400
+        ctx.body = {
+            "status": "error",
+            "message": error.message
+        }
+    }
+}
 
 
 
 
+/**
+ * todo page
+ * 
+ */
+async function fetchLinks(neo4jSession) {
+    const result = await neo4jSession.writeTransaction(tx => tx.run(
+        'MATCH (n)-[r]-(m) RETURN r'))
+    var records = result["records"]
+    var links = []
+    if (records.length > 0) {
+        for (var i = 0; i < records.length; i++) {
+            var link = records[i].toObject()["r"]
+            var link = {
+                "identity": link.identity.toString(),
+                "source": link.start.toString(),
+                "target": link.end.toString(),
+                "value": 1
+            }
+            links.push(link)
+        }
+    }
+    return links
+}
 
 /**
  * count
