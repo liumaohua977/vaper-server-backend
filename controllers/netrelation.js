@@ -187,11 +187,11 @@ async function searchRelation(neo4jSession, relation) {
 async function addRelation(neo4jSession, relation) {
     const result = await neo4jSession.writeTransaction(tx => tx.run(
         'MATCH(a), (b) ' +
-        'where $SendIp in a.ips and $ReceiverIp in b.ips ' +
+        'where $SrcIp in a.ips and $DstIp in b.ips ' +
         'CREATE(a)-[r: tcp]->(b)' +
         'RETURN r', {
-            "SendIp": relation["SendIp"],
-            "ReceiverIp": relation["ReceiverIp"]
+            "SrcIp": relation["SrcIp"],
+            "DstIp": relation["DstIp"]
         }))
     return result
 }
