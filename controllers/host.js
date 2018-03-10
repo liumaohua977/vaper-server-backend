@@ -37,6 +37,7 @@ exports.add_or_update = async (ctx) => {
             ctx.body = "add success."
         }
     } catch (e) {
+        console.error(e.stack)
         ctx.status = 400;
         ctx.body = e.message
     }
@@ -195,9 +196,6 @@ async function searchNode(neo4jSession, uid) {
         'match(host{ uid: $uid })return host', {
             "uid": uid
         }))
-    if (result.nodes.length > 0) {
-
-    }
     return result
 }
 
