@@ -12,7 +12,7 @@ const logger = require('koa-logger');
 const config = require("./config")
 const index = require('./routes/index');
 const user = require('./routes/user');
-const netrelation = require('./routes/netrelation');
+const netflow = require('./routes/netflow');
 const host = require('./routes/host');
 
 // middlewares
@@ -40,13 +40,13 @@ app.use(async (ctx, next) => {
 
 router.use('/', index.routes(), index.allowedMethods());
 router.use('/user', user.routes(), user.allowedMethods());
-router.use('/netrelation', netrelation.routes(), netrelation.allowedMethods());
+router.use('/netflow', netflow.routes(), netflow.allowedMethods());
 router.use('/host', host.routes(), host.allowedMethods());
 
 app.use(router.routes(), router.allowedMethods());
 // response
 
-app.on('error', function(err, ctx){
+app.on('error', function (err, ctx) {
   console.log(err)
   log.error('server error', err, ctx);
 });

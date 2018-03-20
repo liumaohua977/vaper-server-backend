@@ -16,24 +16,22 @@ exports.add = async (ctx) => {
         var uid = req_body["Uid"]
         const session = driver.session()
 
-        var NetRelations = req_body["NetRelations"]
+        var networkFlows = req_body["NetworkFlows"]
         // console.log(ctx.request.body)
-        //Neo4j action:
-        // console.log(NetRelations.length)
-        for (let i = 0; i < NetRelations.length; i++) {
-            const relation = NetRelations[i]
-            var result = await searchRelation(session, relation)
+        for (let i = 0; i < networkFlows.length; i++) {
+            const relation = networkFlows[i]
+            var result = await searchFlow(session, relation)
+            console.log(relation)
             if (result["records"].length <= 0) {
-                // console.log("there is no relation")
-                var res2 = await addRelation(session, relation)
-                // console.log(res2)
+                console.log("there is no relation")
+                var res2 = await addFlow(session, relation)
             } else {
-                // console.log("there is a relation")
+                console.log("there is a relation")
             }
         } // end of for
-
-
-        ctx.body = "test"
+        ctx.body = {
+            "status": "success"
+        }
     } catch (e) {
         ctx.status = 400
         ctx.body = e.message
@@ -62,7 +60,7 @@ exports.search = async (ctx) => {
     }
 }
 /**
- * 查找一批节点的之间的关系
+ * 共有多少条关系
  */
 exports.count = async (ctx) => {
     try {
@@ -80,10 +78,54 @@ exports.count = async (ctx) => {
         }
     }
 }
+/**
+ * 获取关系数据
+ */
+exports.fetchLinks = async (ctx) => {
+    try {
+        const session = driver.session()
+        var links = await fetchLinks(session)
+        ctx.body = {
+            "status": "success",
+            "links": links
+        }
+    } catch (error) {
+        ctx.status = 400
+        ctx.body = {
+            "status": "error",
+            "message": error.message
+        }
+    }
+}
+
+/**
+ * Public methods
+ */
 
 
-
-
+/**
+ * todo page
+ * 
+ */
+async function fetchLinks(neo4jSession) {
+    const result = await neo4jSession.writeTransaction(tx => tx.run(
+        'MATCH (n)-[r]-(m) RETURN r'))
+    var records = result["records"]
+    var links = []
+    if (records.length > 0) {
+        for (var i = 0; i < records.length; i++) {
+            var link = records[i].toObject()["r"]
+            var link = {
+                "identity": link.identity.toString(),
+                "source": link.start.toString(),
+                "target": link.end.toString(),
+                "value": 1
+            }
+            links.push(link)
+        }
+    }
+    return links
+}
 
 /**
  * count
@@ -127,13 +169,13 @@ async function searchByUids(neo4jSession, uids) {
  * 通过两个ip查找是否为已经存储的关系
  * @param {*} NetRelations 
  */
-async function searchRelation(neo4jSession, relation) {
+async function searchFlow(neo4jSession, flow) {
     const result = await neo4jSession.writeTransaction(tx => tx.run(
         'MATCH((anode)-[tcp]-(bnode))' +
-        'WHERE($SendIp in anode.ips and $ReceiverIp in bnode.ips)' +
+        'WHERE($SrcIp in anode.ips and $DstIp in bnode.ips)' +
         'RETURN bnode', {
-            "SendIp": relation["SendIp"],
-            "ReceiverIp": relation["ReceiverIp"]
+            "SrcIp": flow["SrcIp"],
+            "DstIp": flow["DstIp"]
         }))
     return result
 }
@@ -142,15 +184,16 @@ async function searchRelation(neo4jSession, relation) {
  * 新建一个未存储的关系
  * @param {*} NetRelations 
  */
-async function addRelation(neo4jSession, relation) {
+async function addFlow(neo4jSession, relation) {
     const result = await neo4jSession.writeTransaction(tx => tx.run(
         'MATCH(a), (b) ' +
-        'where $SendIp in a.ips and $ReceiverIp in b.ips ' +
-        'CREATE(a)-[r: tcp]->(b)' +
+        'where $SrcIp in a.ips and $DstIp in b.ips ' +
+        'CREATE(a)-[r:tcp{count:0}]->(b)' +
         'RETURN r', {
-            "SendIp": relation["SendIp"],
-            "ReceiverIp": relation["ReceiverIp"]
+            "SrcIp": relation["SrcIp"],
+            "DstIp": relation["DstIp"]
         }))
+    console.log(relation)
     return result
 }
 

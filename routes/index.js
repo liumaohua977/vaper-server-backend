@@ -2,11 +2,10 @@ const router = require('koa-router')();
 
 router.get('/', async function (ctx, next) {
   ctx.state = {
-    title: 'koa2 title6666'
+    title: 'Vaper'
   };
 
-  await ctx.render('index', {
-  });
+  ctx.body = "Vaper backend, we all know."
 });
 
 

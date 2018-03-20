@@ -5,8 +5,8 @@
 
 const configure = function () {
 
-    const path = require('path')
-    ,_ = require('lodash');
+    const path = require('path'),
+        _ = require('lodash');
 
     let config = {
         system: {
@@ -14,9 +14,9 @@ const configure = function () {
             PROJECT_NAME: 'vaper-server-backend'
         },
         neo4j: {
-            uri: 'bolt://192.168.3.5',
-            user:'neo4j',
-            password:'123456'
+            uri: 'bolt://127.0.0.1',
+            user: 'neo4j',
+            password: '123456'
         }
         // path: {
         //     log_path: path.resolve(process.cwd(), 'logs'),
